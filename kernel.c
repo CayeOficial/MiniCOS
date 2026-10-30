@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "commands/commands.h"
+#include "tools/command_history.h"
 
 #define VGA_ADDRESS 0xB8000
 #define VGA_WIDTH 80
@@ -104,8 +105,16 @@ int parse_args(char *input, char *argv[]) {
 void execute_command(char* input) {
     print("\n");
 
+    char input_copy[CMD_LEN];
+    int i = 0;
+    while (input[i] != '\0' && i < CMD_LEN - 1) {
+        input_copy[i] = input[i];
+        i++;
+    }
+    input_copy[i] = '\0';
+
     char *argv[MAX_ARGS];
-    int argc = parse_args(input, argv);
+    int argc = parse_args(input_copy, argv);
 
     if (argc == 0) return;
 
@@ -129,13 +138,29 @@ const char kbd_map[128] = {
   '*',   0, ' '
 };
 
-char get_char(void) {
+int get_char(void) {
+    static int is_extended = 0;
+
     while (1) {
         if (inb(0x64) & 0x01) {
             uint8_t scancode = inb(0x60);
+
+            if (scancode == 0xE0) {
+                is_extended = 1;
+                continue;
+            }
+
             if (!(scancode & 0x80)) {
-                char c = kbd_map[scancode];
-                if (c != 0) return c;
+                if (is_extended) {
+                    is_extended = 0;
+                    if (scancode == 0x48) return KEY_UP;
+                    if (scancode == 0x50) return KEY_DOWN;
+                } else {
+                    char c = kbd_map[scancode];
+                    if (c != 0) return (unsigned char)c;
+                }
+            } else {
+                is_extended = 0;
             }
         }
     }
@@ -173,7 +198,7 @@ void kernel_main(void) {
     clear_screen();
     print("COS Modular Kernel\nWrite 'help' for commands.\n\n");
 
-    char buffer[128];
+    char buffer[CMD_LEN];
     int buf_index = 0;
 
     while (1) {
@@ -181,18 +206,47 @@ void kernel_main(void) {
         buf_index = 0;
 
         while (1) {
-            char c = get_char();
+            int c = get_char();
 
             if (c == '\n') {
                 buffer[buf_index] = '\0';
+                history_add(buffer);
                 execute_command(buffer);
                 break;
-            } else if (c == '\b') {
+            }
+            else if (c == '\b') {
                 if (buf_index > 0) {
                     buf_index--;
                     put_char('\b');
                 }
-            } else if (buf_index < 127) {
+            }
+            else if (c == KEY_UP) {
+                const char* prev_cmd = history_get_prev();
+                if (prev_cmd) {
+                    while (buf_index > 0) {
+                        put_char('\b');
+                        buf_index--;
+                    }
+                    for (int i = 0; prev_cmd[i] != '\0'; i++) {
+                        buffer[buf_index++] = prev_cmd[i];
+                        put_char(prev_cmd[i]);
+                    }
+                }
+            }
+            else if (c == KEY_DOWN) {
+                const char* next_cmd = history_get_next();
+                if (next_cmd) {
+                    while (buf_index > 0) {
+                        put_char('\b');
+                        buf_index--;
+                    }
+                    for (int i = 0; next_cmd[i] != '\0'; i++) {
+                        buffer[buf_index++] = next_cmd[i];
+                        put_char(next_cmd[i]);
+                    }
+                }
+            }
+            else if (buf_index < CMD_LEN - 1 && c >= 32 && c <= 126) {
                 buffer[buf_index++] = c;
                 put_char(c);
             }

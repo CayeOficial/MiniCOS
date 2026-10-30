@@ -8,7 +8,11 @@ LDFLAGS = -m elf_i386 --no-warn-rwx-segments -T linker.ld
 
 CMD_SRCS = $(wildcard commands/*.c)
 CMD_OBJS = $(CMD_SRCS:.c=.o)
-OBJS = boot.o kernel.o $(CMD_OBJS)
+
+TOOLS_SRCS = $(wildcard tools/*.c)
+TOOLS_OBJS = $(TOOLS_SRCS:.c=.o)
+
+OBJS = boot.o kernel.o $(CMD_OBJS) $(TOOLS_OBJS)
 
 TARGET = kernel.bin
 
