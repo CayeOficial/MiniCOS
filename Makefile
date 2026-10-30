@@ -12,7 +12,7 @@ CMD_OBJS = $(CMD_SRCS:.c=.o)
 TOOLS_SRCS = $(wildcard tools/*.c)
 TOOLS_OBJS = $(TOOLS_SRCS:.c=.o)
 
-OBJS = boot.o kernel.o $(CMD_OBJS) $(TOOLS_OBJS)
+OBJS = boot.o kernel.o strings.o $(CMD_OBJS) $(TOOLS_OBJS)
 
 TARGET = kernel.bin
 

@@ -8,7 +8,7 @@ void clear_screen(void);
 uint8_t inb(uint16_t port);
 void outb(uint16_t port, uint8_t val);
 void outw(uint16_t port, uint16_t val);
-int confirm(const char *message);
+int confirm(const char *message, int argc, char *argv[]);
 
 void cmd_help(int argc, char *argv[]);
 void cmd_clear(int argc, char *argv[]);

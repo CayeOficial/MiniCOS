@@ -1,8 +1,7 @@
 #include "commands.h"
 
 void cmd_reboot(int argc, char *argv[]) {
-    (void)argc; (void)argv;
-    if (!confirm("Are you sure you want to reboot the kernel?")) {
+    if (!confirm("Are you sure you want to reboot the kernel?", argc, argv)) {
         return;
     }
     print("Rebooting kernel...\n");

@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include "commands/commands.h"
 #include "tools/command_history.h"
+#include "strings.h"
 
 #define VGA_ADDRESS 0xB8000
 #define VGA_WIDTH 80
@@ -166,7 +167,23 @@ int get_char(void) {
     }
 }
 
-int confirm(const char *message) {
+int contains_flag(const char *flag, int argc, char *argv[]) {
+    for (int i = 1; i < argc; i++) {
+        if (equals_ignore_case(argv[i], flag)) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int confirm(const char *message, int argc, char *argv[]) {
+    if (contains_flag("-y", argc, argv)) {
+        return 1;
+    } else if (contains_flag("-n", argc, argv)) {
+        return 0;
+    }
+
     print(message);
     print(" [y/N]: ");
 

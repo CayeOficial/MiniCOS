@@ -1,8 +1,7 @@
 #include "commands.h"
 
 void cmd_poweroff(int argc, char *argv[]) {
-    (void)argc; (void)argv;
-    if (!confirm("Are you sure you want to power off the kernel?")) {
+    if (!confirm("Are you sure you want to power off the kernel?", argc, argv)) {
         return;
     }
     print("Powering off kernel...\n");
